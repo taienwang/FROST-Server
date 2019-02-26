@@ -17,9 +17,10 @@
  */
 package de.fraunhofer.iosb.ilt.sta.model.builder.core;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.fraunhofer.iosb.ilt.sta.model.core.NamedEntity;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author scf
@@ -30,10 +31,10 @@ public abstract class NamedEntityBuilder<U extends NamedEntity<U>, V extends Abs
 
     private String name;
     private String description;
-    private Map<String, Object> properties;
+    private ObjectNode properties;
 
     public NamedEntityBuilder() {
-        properties = new HashMap<>();
+        properties = JsonNodeFactory.instance.objectNode();
     }
 
     public final V setName(String name) {
@@ -46,12 +47,32 @@ public abstract class NamedEntityBuilder<U extends NamedEntity<U>, V extends Abs
         return getThis();
     }
 
-    public final V setProperties(Map<String, Object> properties) {
+    public final V setProperties(ObjectNode properties) {
         this.properties = properties;
         return getThis();
     }
 
-    public final V addProperty(String name, Object value) {
+    public final V addProperty(String name, JsonNode value) {
+        this.properties.set(name, value);
+        return getThis();
+    }
+
+    public final V addProperty(String name, String value) {
+        this.properties.put(name, value);
+        return getThis();
+    }
+
+    public final V addProperty(String name, int value) {
+        this.properties.put(name, value);
+        return getThis();
+    }
+
+    public final V addProperty(String name, double value) {
+        this.properties.put(name, value);
+        return getThis();
+    }
+
+    public final V addProperty(String name, boolean value) {
         this.properties.put(name, value);
         return getThis();
     }

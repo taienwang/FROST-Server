@@ -28,6 +28,7 @@ import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.DataSize;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.PostgresPersistenceManager;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils.getFieldOrNull;
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonValue;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.CAN_NOT_BE_NULL;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.CHANGED_MULTIPLE_ROWS;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.tables.AbstractTableTasks;
@@ -76,8 +77,9 @@ public class TaskFactory<J> implements EntityFactory<Task, J> {
         entity.setTaskingCapability(entityFactories.taskingCapabilityFromId(record, table.getTaskingCapabilityId()));
         entity.setCreationTime(Utils.instantFromTime(getFieldOrNull(record, table.creationTime)));
         if (select.isEmpty() || select.contains(EntityProperty.TASKINGPARAMETERS)) {
-            String taskingParams = getFieldOrNull(record, table.taskingParameters);
-            entity.setTaskingParameters(Utils.jsonToObject(taskingParams, Map.class));
+            JsonValue taskingParams = getFieldOrNull(record, table.taskingParameters);
+            dataSize.increase(taskingParams.getStringLength());
+            entity.setTaskingParameters(taskingParams.getObjectValue());
         }
 
         return entity;
@@ -93,7 +95,7 @@ public class TaskFactory<J> implements EntityFactory<Task, J> {
 
         insert.put(table.creationTime, new Timestamp(Calendar.getInstance().getTimeInMillis()));
         insert.put(table.getTaskingCapabilityId(), tcId);
-        insert.put(table.taskingParameters, EntityFactories.objectToJson(task.getTaskingParameters()));
+        insert.put(table.taskingParameters, new JsonValue(task.getTaskingParameters()));
 
         entityFactories.insertUserDefinedId(pm, insert, table.getId(), task);
 
@@ -129,7 +131,7 @@ public class TaskFactory<J> implements EntityFactory<Task, J> {
             message.addField(EntityProperty.TIME);
         }
         if (task.isSetTaskingParameters()) {
-            update.put(table.taskingParameters, EntityFactories.objectToJson(task.getTaskingParameters()));
+            update.put(table.taskingParameters, new JsonValue(task.getTaskingParameters()));
             message.addField(EntityProperty.TASKINGPARAMETERS);
         }
 

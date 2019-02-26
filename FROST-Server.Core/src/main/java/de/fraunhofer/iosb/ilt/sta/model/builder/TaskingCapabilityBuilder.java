@@ -17,6 +17,8 @@
  */
 package de.fraunhofer.iosb.ilt.sta.model.builder;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.fraunhofer.iosb.ilt.sta.model.Actuator;
 import de.fraunhofer.iosb.ilt.sta.model.Task;
 import de.fraunhofer.iosb.ilt.sta.model.TaskingCapability;
@@ -25,8 +27,6 @@ import de.fraunhofer.iosb.ilt.sta.model.builder.core.NamedEntityBuilder;
 import de.fraunhofer.iosb.ilt.sta.model.core.EntitySet;
 import de.fraunhofer.iosb.ilt.sta.model.core.EntitySetImpl;
 import de.fraunhofer.iosb.ilt.sta.path.EntityType;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Builder class for Datastream objects.
@@ -35,17 +35,17 @@ import java.util.Map;
  */
 public class TaskingCapabilityBuilder extends NamedEntityBuilder<TaskingCapability, TaskingCapabilityBuilder> {
 
-    private Map<String, Object> taskingParameters;
+    private ObjectNode taskingParameters;
     private Actuator actuator;
     private EntitySet<Task> tasks;
     private Thing thing;
 
     public TaskingCapabilityBuilder() {
-        taskingParameters = new HashMap<>();
+        taskingParameters = JsonNodeFactory.instance.objectNode();
         tasks = new EntitySetImpl<>(EntityType.TASK);
     }
 
-    public TaskingCapabilityBuilder setTaskingParameters(Map<String, Object> taskingParameters) {
+    public TaskingCapabilityBuilder setTaskingParameters(ObjectNode taskingParameters) {
         this.taskingParameters = taskingParameters;
         return this;
     }

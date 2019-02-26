@@ -53,7 +53,6 @@ import de.fraunhofer.iosb.ilt.sta.util.NoSuchEntityException;
 import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.geojson.Polygon;
 import org.slf4j.Logger;
@@ -114,7 +113,7 @@ public class MultiDatastreamFactory<I extends SimpleExpression<J> & Path<J>, J> 
         }
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
             String props = tuple.get(qInstance.properties);
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            entity.setProperties(Utils.jsonToTreeObject(props));
         }
         entity.setSensor(entityFactories.sensorFromId(tuple, qInstance.getSensorId()));
         entity.setThing(entityFactories.thingFromId(tuple, qInstance.getThingId()));
@@ -138,9 +137,9 @@ public class MultiDatastreamFactory<I extends SimpleExpression<J> & Path<J>, J> 
         SQLInsertClause insert = qFactory.insert(qd);
         insert.set(qd.name, ds.getName());
         insert.set(qd.description, ds.getDescription());
-        insert.set(qd.observationTypes, EntityFactories.objectToJson(ds.getMultiObservationDataTypes()));
-        insert.set(qd.unitOfMeasurements, EntityFactories.objectToJson(ds.getUnitOfMeasurements()));
-        insert.set(qd.properties, EntityFactories.objectToJson(ds.getProperties()));
+        insert.set(qd.observationTypes, Utils.objectToJsonExpression(ds.getMultiObservationDataTypes()));
+        insert.set(qd.unitOfMeasurements, Utils.objectToJsonExpression(ds.getUnitOfMeasurements()));
+        insert.set(qd.properties, Utils.objectToJsonExpression(ds.getProperties()));
 
         insert.set(qd.phenomenonTimeStart, new Timestamp(PostgresPersistenceManager.DATETIME_MAX.getMillis()));
         insert.set(qd.phenomenonTimeEnd, new Timestamp(PostgresPersistenceManager.DATETIME_MIN.getMillis()));
@@ -156,7 +155,7 @@ public class MultiDatastreamFactory<I extends SimpleExpression<J> & Path<J>, J> 
         LOGGER.debug("Inserted multiDatastream. Created id = {}.", multiDatastreamId);
         ds.setId(entityFactories.idFromObject(multiDatastreamId));
 
-        // Create new Locations, if any.
+        // Create new ObservedProperties, if any.
         EntitySet<ObservedProperty> ops = ds.getObservedProperties();
         int rank = 0;
         for (ObservedProperty op : ops) {
@@ -253,7 +252,7 @@ public class MultiDatastreamFactory<I extends SimpleExpression<J> & Path<J>, J> 
 
     private void updateProperties(MultiDatastream md, SQLUpdateClause update, AbstractQMultiDatastreams<? extends AbstractQMultiDatastreams, I, J> qmd, EntityChangedMessage message) {
         if (md.isSetProperties()) {
-            update.set(qmd.properties, EntityFactories.objectToJson(md.getProperties()));
+            update.set(qmd.properties, Utils.objectToJsonExpression(md.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
     }
@@ -286,7 +285,7 @@ public class MultiDatastreamFactory<I extends SimpleExpression<J> & Path<J>, J> 
             }
             List<UnitOfMeasurement> uoms = md.getUnitOfMeasurements();
             countUom = uoms.size();
-            update.set(qmd.unitOfMeasurements, EntityFactories.objectToJson(uoms));
+            update.set(qmd.unitOfMeasurements, Utils.objectToJsonExpression(uoms));
             message.addField(EntityProperty.UNITOFMEASUREMENTS);
         }
         return countUom;
@@ -300,7 +299,7 @@ public class MultiDatastreamFactory<I extends SimpleExpression<J> & Path<J>, J> 
                 throw new IncompleteEntityException("multiObservationDataTypes" + CAN_NOT_BE_NULL);
             }
             countDataTypes = dataTypes.size();
-            update.set(qmd.observationTypes, EntityFactories.objectToJson(dataTypes));
+            update.set(qmd.observationTypes, Utils.objectToJsonExpression(dataTypes));
             message.addField(EntityProperty.MULTIOBSERVATIONDATATYPES);
         }
         return countDataTypes;

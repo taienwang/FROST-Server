@@ -50,7 +50,6 @@ import de.fraunhofer.iosb.ilt.sta.util.IncompleteEntityException;
 import de.fraunhofer.iosb.ilt.sta.util.NoSuchEntityException;
 import java.sql.Timestamp;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import org.geojson.Polygon;
 import org.slf4j.Logger;
@@ -112,7 +111,7 @@ public class DatastreamFactory<I extends SimpleExpression<J> & Path<J>, J> imple
         }
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
             String props = tuple.get(qInstance.properties);
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            entity.setProperties(Utils.jsonToTreeObject(props));
         }
         entity.setSensor(entityFactories.sensorFromId(tuple, qInstance.getSensorId()));
         entity.setThing(entityFactories.thingFromId(tuple, qInstance.getThingId()));
@@ -142,7 +141,7 @@ public class DatastreamFactory<I extends SimpleExpression<J> & Path<J>, J> imple
         insert.set(qd.unitDefinition, ds.getUnitOfMeasurement().getDefinition());
         insert.set(qd.unitName, ds.getUnitOfMeasurement().getName());
         insert.set(qd.unitSymbol, ds.getUnitOfMeasurement().getSymbol());
-        insert.set(qd.properties, EntityFactories.objectToJson(ds.getProperties()));
+        insert.set(qd.properties, Utils.objectToJsonExpression(ds.getProperties()));
 
         insert.set(qd.phenomenonTimeStart, new Timestamp(PostgresPersistenceManager.DATETIME_MAX.getMillis()));
         insert.set(qd.phenomenonTimeEnd, new Timestamp(PostgresPersistenceManager.DATETIME_MIN.getMillis()));
@@ -248,7 +247,7 @@ public class DatastreamFactory<I extends SimpleExpression<J> & Path<J>, J> imple
 
     private void updateProperties(Datastream datastream, SQLUpdateClause update, AbstractQDatastreams<? extends AbstractQDatastreams, I, J> qd, EntityChangedMessage message) {
         if (datastream.isSetProperties()) {
-            update.set(qd.properties, EntityFactories.objectToJson(datastream.getProperties()));
+            update.set(qd.properties, Utils.objectToJsonExpression(datastream.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
     }

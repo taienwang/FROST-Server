@@ -1,11 +1,14 @@
 package de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.tables;
 
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonBinding;
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonValue;
 import java.time.OffsetDateTime;
 import org.jooq.Field;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.TableField;
 import org.jooq.impl.DSL;
+import org.jooq.impl.DefaultDataType;
 import org.jooq.impl.TableImpl;
 
 public abstract class AbstractTableObservations<J> extends TableImpl<Record> implements StaTable<J> {
@@ -48,7 +51,7 @@ public abstract class AbstractTableObservations<J> extends TableImpl<Record> imp
     /**
      * The column <code>public.OBSERVATIONS.RESULT_QUALITY</code>.
      */
-    public final TableField<Record, String> resultQuality = createField("RESULT_QUALITY", org.jooq.impl.SQLDataType.CLOB, this, "");
+    public final TableField<Record, JsonValue> resultQuality = createField("RESULT_QUALITY", DefaultDataType.getDefaultDataType("\"pg_catalog\".\"jsonb\""), this, "", new JsonBinding());
 
     /**
      * The column <code>public.OBSERVATIONS.VALID_TIME_START</code>.
@@ -63,7 +66,7 @@ public abstract class AbstractTableObservations<J> extends TableImpl<Record> imp
     /**
      * The column <code>public.OBSERVATIONS.PARAMETERS</code>.
      */
-    public final TableField<Record, String> parameters = createField("PARAMETERS", org.jooq.impl.SQLDataType.CLOB, this, "");
+    public final TableField<Record, JsonValue> parameters = createField("PARAMETERS", DefaultDataType.getDefaultDataType("\"pg_catalog\".\"jsonb\""), this, "", new JsonBinding());
 
     /**
      * The column <code>public.OBSERVATIONS.RESULT_TYPE</code>.
@@ -73,7 +76,7 @@ public abstract class AbstractTableObservations<J> extends TableImpl<Record> imp
     /**
      * The column <code>public.OBSERVATIONS.RESULT_JSON</code>.
      */
-    public final TableField<Record, String> resultJson = createField("RESULT_JSON", org.jooq.impl.SQLDataType.CLOB, this, "");
+    public final TableField<Record, JsonValue> resultJson = createField("RESULT_JSON", DefaultDataType.getDefaultDataType("\"pg_catalog\".\"jsonb\""), this, "", new JsonBinding());
 
     /**
      * The column <code>public.OBSERVATIONS.RESULT_BOOLEAN</code>.

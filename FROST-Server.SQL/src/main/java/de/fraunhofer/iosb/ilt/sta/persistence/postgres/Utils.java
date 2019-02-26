@@ -19,6 +19,10 @@ package de.fraunhofer.iosb.ilt.sta.persistence.postgres;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.querydsl.core.types.Expression;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.TemplateExpression;
 import de.fraunhofer.iosb.ilt.sta.json.deserialize.EntityParser;
 import de.fraunhofer.iosb.ilt.sta.json.deserialize.custom.GeoJsonDeserializier;
 import de.fraunhofer.iosb.ilt.sta.model.ext.TimeInstant;
@@ -42,6 +46,7 @@ public class Utils {
     public static final String INTERVAL_1 = "({1})::interval";
     public static final String TIMESTAMP_0 = "({0})::timestamp";
     public static final String TIMESTAMP_1 = "({1})::timestamp";
+    public static final String JSON_CAST = "({0})::json";
 
     /**
      * The logger for this class.
@@ -49,6 +54,7 @@ public class Utils {
     private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
     private static final String FAILED_JSON_PARSE = "Failed to parse stored json.";
     private static JsonMapper geoJsonMapper;
+    private static final Expression<String> NULL_STRING = ExpressionUtils.template(String.class, "NULL");
 
     private Utils() {
         // Utility class, should not be instantiated.
@@ -123,6 +129,22 @@ public class Utils {
         }
     }
 
+    public static ObjectNode jsonToTreeObject(String json) {
+        if (json == null) {
+            return null;
+        }
+
+        try {
+            JsonNode value = EntityParser.getSimpleObjectMapper().readTree(json);
+            if (value == null || value.isObject()) {
+                return (ObjectNode) value;
+            }
+            throw new IllegalStateException("Non-object json node found");
+        } catch (IOException ex) {
+            throw new IllegalStateException(FAILED_JSON_PARSE, ex);
+        }
+    }
+
     public static <T> T jsonToObject(String json, Class<T> clazz) {
         if (json == null) {
             return null;
@@ -145,4 +167,14 @@ public class Utils {
         }
     }
 
+    public static Expression<String> objectToJsonExpression(JsonNode o) {
+        if (o == null) {
+            return NULL_STRING;
+        }
+        return ExpressionUtils.template(String.class, JSON_CAST, EntityFactories.objectToJson(o));
+    }
+
+    public static TemplateExpression<String> objectToJsonExpression(Object o) {
+        return ExpressionUtils.template(String.class, JSON_CAST, EntityFactories.objectToJson(o));
+    }
 }

@@ -48,7 +48,6 @@ import de.fraunhofer.iosb.ilt.sta.query.Query;
 import de.fraunhofer.iosb.ilt.sta.util.IncompleteEntityException;
 import de.fraunhofer.iosb.ilt.sta.util.NoSuchEntityException;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +87,7 @@ public class ObservedPropertyFactory<I extends SimpleExpression<J> & Path<J>, J>
         entity.setName(tuple.get(qInstance.name));
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
             String props = tuple.get(qInstance.properties);
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            entity.setProperties(Utils.jsonToTreeObject(props));
         }
         return entity;
     }
@@ -101,7 +100,7 @@ public class ObservedPropertyFactory<I extends SimpleExpression<J> & Path<J>, J>
         insert.set(qop.definition, op.getDefinition());
         insert.set(qop.name, op.getName());
         insert.set(qop.description, op.getDescription());
-        insert.set(qop.properties, EntityFactories.objectToJson(op.getProperties()));
+        insert.set(qop.properties, Utils.objectToJsonExpression(op.getProperties()));
 
         entityFactories.insertUserDefinedId(pm, insert, qop.getId(), op);
 
@@ -155,7 +154,7 @@ public class ObservedPropertyFactory<I extends SimpleExpression<J> & Path<J>, J>
             message.addField(EntityProperty.NAME);
         }
         if (op.isSetProperties()) {
-            update.set(qop.properties, EntityFactories.objectToJson(op.getProperties()));
+            update.set(qop.properties, Utils.objectToJsonExpression(op.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
 

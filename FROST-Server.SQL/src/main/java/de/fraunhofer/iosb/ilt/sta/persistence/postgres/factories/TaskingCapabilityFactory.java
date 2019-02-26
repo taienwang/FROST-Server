@@ -46,7 +46,6 @@ import de.fraunhofer.iosb.ilt.sta.query.Query;
 import de.fraunhofer.iosb.ilt.sta.util.IncompleteEntityException;
 import de.fraunhofer.iosb.ilt.sta.util.NoSuchEntityException;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,11 +85,11 @@ public class TaskingCapabilityFactory<I extends SimpleExpression<J> & Path<J>, J
         entity.setDescription(tuple.get(qInstance.description));
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
             String props = tuple.get(qInstance.properties);
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            entity.setProperties(Utils.jsonToTreeObject(props));
         }
         if (select.isEmpty() || select.contains(EntityProperty.TASKINGPARAMETERS)) {
             String props = tuple.get(qInstance.taskingParameters);
-            entity.setTaskingParameters(Utils.jsonToObject(props, Map.class));
+            entity.setTaskingParameters(Utils.jsonToTreeObject(props));
         }
         entity.setActuator(entityFactories.actuatorFromId(tuple, qInstance.getActuatorId()));
         entity.setThing(entityFactories.thingFromId(tuple, qInstance.getThingId()));
@@ -113,8 +112,8 @@ public class TaskingCapabilityFactory<I extends SimpleExpression<J> & Path<J>, J
         SQLInsertClause insert = qFactory.insert(qtc);
         insert.set(qtc.name, tc.getName());
         insert.set(qtc.description, tc.getDescription());
-        insert.set(qtc.properties, EntityFactories.objectToJson(tc.getProperties()));
-        insert.set(qtc.taskingParameters, EntityFactories.objectToJson(tc.getTaskingParameters()));
+        insert.set(qtc.properties, Utils.objectToJsonExpression(tc.getProperties()));
+        insert.set(qtc.taskingParameters, Utils.objectToJsonExpression(tc.getTaskingParameters()));
 
         insert.set(qtc.getActuatorId(), (J) actuator.getId().getValue());
         insert.set(qtc.getThingId(), (J) thing.getId().getValue());
@@ -189,14 +188,14 @@ public class TaskingCapabilityFactory<I extends SimpleExpression<J> & Path<J>, J
 
     private void updateProperties(TaskingCapability taskingCapability, SQLUpdateClause update, AbstractQTaskingCapabilities<? extends AbstractQTaskingCapabilities, I, J> qd, EntityChangedMessage message) {
         if (taskingCapability.isSetProperties()) {
-            update.set(qd.properties, EntityFactories.objectToJson(taskingCapability.getProperties()));
+            update.set(qd.properties, Utils.objectToJsonExpression(taskingCapability.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
     }
 
     private void updateTaskingParameters(TaskingCapability taskingCapability, SQLUpdateClause update, AbstractQTaskingCapabilities<? extends AbstractQTaskingCapabilities, I, J> qd, EntityChangedMessage message) {
         if (taskingCapability.isSetTaskingParameters()) {
-            update.set(qd.taskingParameters, EntityFactories.objectToJson(taskingCapability.getTaskingParameters()));
+            update.set(qd.taskingParameters, Utils.objectToJsonExpression(taskingCapability.getTaskingParameters()));
             message.addField(EntityProperty.TASKINGPARAMETERS);
         }
     }

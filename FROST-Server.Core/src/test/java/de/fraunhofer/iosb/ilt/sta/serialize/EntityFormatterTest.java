@@ -19,6 +19,7 @@ package de.fraunhofer.iosb.ilt.sta.serialize;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.DecimalNode;
 import de.fraunhofer.iosb.ilt.sta.formatter.DataArrayResult;
 import de.fraunhofer.iosb.ilt.sta.formatter.DataArrayValue;
 import de.fraunhofer.iosb.ilt.sta.json.deserialize.EntityParser;
@@ -732,6 +733,17 @@ public class EntityFormatterTest {
                 .setPhenomenonTime(TestHelper.createTimeInstantUTC(2014, 12, 31, 11, 59, 59))
                 .setResultTime(TestHelper.createTimeInstantUTC(2014, 12, 31, 19, 59, 59))
                 .setResult(new BigDecimal("70.40"))
+                .build();
+        assert (jsonEqual(expResult, EntityFormatter.writeEntity(entity)));
+
+        entity = new ObservationBuilder()
+                .setId(new IdLong(1))
+                .setSelfLink("http://example.org/v1.0/Observations(1)")
+                .setFeatureOfInterest(new FeatureOfInterestBuilder().setNavigationLink("Observations(1)/FeatureOfInterest").build())
+                .setDatastream(new DatastreamBuilder().setNavigationLink("Observations(1)/Datastream").build())
+                .setPhenomenonTime(TestHelper.createTimeInstantUTC(2014, 12, 31, 11, 59, 59))
+                .setResultTime(TestHelper.createTimeInstantUTC(2014, 12, 31, 19, 59, 59))
+                .setResult(new DecimalNode(new BigDecimal("70.40")))
                 .build();
         assert (jsonEqual(expResult, EntityFormatter.writeEntity(entity)));
     }

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import de.fraunhofer.iosb.ilt.sta.formatter.DataArrayValue;
 import de.fraunhofer.iosb.ilt.sta.json.deserialize.custom.CustomDeserializationManager;
 import de.fraunhofer.iosb.ilt.sta.json.deserialize.custom.CustomEntityChangedMessageDeserializer;
@@ -142,7 +143,8 @@ public class EntityParser {
     public static ObjectMapper getSimpleObjectMapper() {
         if (simpleObjectMapper == null) {
             simpleObjectMapper = new ObjectMapper()
-                    .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+                    .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
+                    .setNodeFactory(JsonNodeFactory.withExactBigDecimals(true));
         }
         return simpleObjectMapper;
     }

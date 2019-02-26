@@ -17,6 +17,7 @@
  */
 package de.fraunhofer.iosb.ilt.sta.util;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.fraunhofer.iosb.ilt.sta.model.FeatureOfInterest;
 import de.fraunhofer.iosb.ilt.sta.model.builder.ObservationBuilder;
 import de.fraunhofer.iosb.ilt.sta.model.core.Id;
@@ -74,8 +75,8 @@ public class ArrayValueHandlers {
                 (Object value, ObservationBuilder target) -> target.setResultQuality(value)
         );
         HANDLERS.put("parameters", (Object value, ObservationBuilder target) -> {
-            if (value instanceof Map) {
-                target.setParameters((Map<String, Object>) value);
+            if (value instanceof ObjectNode) {
+                target.setParameters((ObjectNode) value);
                 return;
             }
             throw new IllegalArgumentException("parameters has to be a map.");

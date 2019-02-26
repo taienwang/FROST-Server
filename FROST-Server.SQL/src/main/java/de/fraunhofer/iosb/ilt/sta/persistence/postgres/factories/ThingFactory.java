@@ -57,7 +57,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +96,7 @@ public class ThingFactory<I extends SimpleExpression<J> & Path<J>, J> implements
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
             String props = tuple.get(qInstance.properties);
             dataSize.increase(props == null ? 0 : props.length());
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            entity.setProperties(Utils.jsonToTreeObject(props));
         }
         return entity;
     }
@@ -109,7 +108,7 @@ public class ThingFactory<I extends SimpleExpression<J> & Path<J>, J> implements
         SQLInsertClause insert = qFactory.insert(qt);
         insert.set(qt.name, t.getName());
         insert.set(qt.description, t.getDescription());
-        insert.set(qt.properties, EntityFactories.objectToJson(t.getProperties()));
+        insert.set(qt.properties, Utils.objectToJsonExpression(t.getProperties()));
 
         entityFactories.insertUserDefinedId(pm, insert, qt.getId(), t);
 
@@ -191,7 +190,7 @@ public class ThingFactory<I extends SimpleExpression<J> & Path<J>, J> implements
             message.addField(EntityProperty.DESCRIPTION);
         }
         if (t.isSetProperties()) {
-            update.set(qt.properties, EntityFactories.objectToJson(t.getProperties()));
+            update.set(qt.properties, Utils.objectToJsonExpression(t.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
         update.where(qt.getId().eq(thingId));

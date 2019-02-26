@@ -17,6 +17,7 @@
  */
 package de.fraunhofer.iosb.ilt.sta.model;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.fraunhofer.iosb.ilt.sta.messagebus.EntityChangedMessage;
 import de.fraunhofer.iosb.ilt.sta.model.core.EntitySet;
 import de.fraunhofer.iosb.ilt.sta.model.core.EntitySetImpl;
@@ -29,7 +30,6 @@ import de.fraunhofer.iosb.ilt.sta.path.EntityType;
 import de.fraunhofer.iosb.ilt.sta.path.NavigationProperty;
 import de.fraunhofer.iosb.ilt.sta.path.ResourcePathElement;
 import de.fraunhofer.iosb.ilt.sta.util.IncompleteEntityException;
-import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +45,7 @@ public class TaskingCapability extends NamedEntity<TaskingCapability> {
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskingCapability.class);
 
-    private Map<String, Object> taskingParameters;
+    private ObjectNode taskingParameters;
 
     private Actuator actuator;
     private Thing thing;
@@ -132,12 +132,12 @@ public class TaskingCapability extends NamedEntity<TaskingCapability> {
         }
     }
 
-    public Map<String, Object> getTaskingParameters() {
+    public ObjectNode getTaskingParameters() {
         return taskingParameters;
     }
 
-    public void setTaskingParameters(Map<String, Object> taskingParameters) {
-        if (taskingParameters == null || taskingParameters.isEmpty()) {
+    public void setTaskingParameters(ObjectNode taskingParameters) {
+        if (taskingParameters == null || taskingParameters.size() == 0) {
             this.taskingParameters = null;
         } else {
             this.taskingParameters = taskingParameters;

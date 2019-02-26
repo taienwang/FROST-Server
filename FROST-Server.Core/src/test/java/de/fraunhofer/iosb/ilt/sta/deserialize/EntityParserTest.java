@@ -19,6 +19,8 @@ package de.fraunhofer.iosb.ilt.sta.deserialize;
 
 import de.fraunhofer.iosb.ilt.sta.json.deserialize.EntityParser;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.fraunhofer.iosb.ilt.sta.formatter.DataArrayValue;
 import de.fraunhofer.iosb.ilt.sta.model.Datastream;
 import de.fraunhofer.iosb.ilt.sta.model.FeatureOfInterest;
@@ -610,6 +612,36 @@ public class EntityParserTest {
     }
 
     @Test
+    public void readObservation_ResultJsonObject() throws IOException {
+        String json = "{\n"
+                + "  \"result\" : {\"value1\": 12.3, \"value2\": \"two\", \"value3\": true, \"value4\": false, \"value5\": [1,2,3,4,5] }\n"
+                + "}";
+        Map<String, Object> resultValue = new HashMap<>();
+        resultValue.put("value1", BigDecimal.valueOf(12.3));
+        resultValue.put("value2", "two");
+        resultValue.put("value3", true);
+        resultValue.put("value4", false);
+        resultValue.put("value5", Arrays.asList(1, 2, 3, 4, 5));
+        Observation expectedResult = new ObservationBuilder()
+                .setResult(resultValue)
+                .build();
+        Observation result = entityParser.parseObservation(json);
+        assertEquals(expectedResult, result);
+    }
+
+    @Test
+    public void readObservation_ResultJsonArray() throws IOException {
+        String json = "{\n"
+                + "  \"result\" : [1,2,3,4,5]\n"
+                + "}";
+        Observation expectedResult = new ObservationBuilder()
+                .setResult(Arrays.asList(1, 2, 3, 4, 5))
+                .build();
+        Observation result = entityParser.parseObservation(json);
+        assertEquals(expectedResult, result);
+    }
+
+    @Test
     public void readObservation_DataArray() throws IOException {
         String json = "[\n"
                 + "  {\n"
@@ -987,9 +1019,9 @@ public class EntityParserTest {
                 + "		} 		\n"
                 + "    }\n"
                 + "}";
-        Map<String, Object> property3 = new HashMap<>();
-        property3.put("someNestedProperty", 10);
-        property3.put("someOtherNestedProperty", "someValue");
+        ObjectNode property3 = JsonNodeFactory.instance.objectNode()
+                .put("someNestedProperty", 10)
+                .put("someOtherNestedProperty", "someValue");
         Thing expectedResult = new ThingBuilder()
                 .setName("camping lantern")
                 .setDescription("camping lantern")

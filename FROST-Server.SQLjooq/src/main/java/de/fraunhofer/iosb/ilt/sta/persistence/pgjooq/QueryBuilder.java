@@ -345,6 +345,9 @@ public class QueryBuilder<J extends Comparable> implements ResourcePathVisitor {
     public void visit(PropertyPathElement element) {
         selectedProperties.add(element.getProperty());
         selectedProperties.add(EntityProperty.ID);
+        Set<Property> staSelect = staQuery.getSelect();
+        staSelect.add(element.getProperty());
+        staSelect.add(EntityProperty.ID);
     }
 
     @Override

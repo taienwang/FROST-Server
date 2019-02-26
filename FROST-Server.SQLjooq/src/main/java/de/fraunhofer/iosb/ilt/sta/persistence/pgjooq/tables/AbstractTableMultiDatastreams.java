@@ -1,6 +1,8 @@
 package de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.tables;
 
-import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.PostGisGeometryBinding;
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonBinding;
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonValue;
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.PostGisGeometryBinding;
 import java.time.OffsetDateTime;
 import org.geolatte.geom.Geometry;
 import org.jooq.Field;
@@ -8,6 +10,7 @@ import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.TableField;
 import org.jooq.impl.DSL;
+import org.jooq.impl.DefaultDataType;
 import org.jooq.impl.TableImpl;
 
 public abstract class AbstractTableMultiDatastreams<J> extends TableImpl<Record> implements StaTable<J> {
@@ -34,7 +37,7 @@ public abstract class AbstractTableMultiDatastreams<J> extends TableImpl<Record>
     /**
      * The column <code>public.MULTI_DATASTREAMS.OBSERVATION_TYPES</code>.
      */
-    public final TableField<Record, String> observationTypes = createField("OBSERVATION_TYPES", org.jooq.impl.SQLDataType.CLOB, this, "");
+    public final TableField<Record, JsonValue> observationTypes = createField("OBSERVATION_TYPES", DefaultDataType.getDefaultDataType("\"pg_catalog\".\"jsonb\""), this, "", new JsonBinding());
 
     /**
      * The column <code>public.MULTI_DATASTREAMS.PHENOMENON_TIME_START</code>.
@@ -59,7 +62,7 @@ public abstract class AbstractTableMultiDatastreams<J> extends TableImpl<Record>
     /**
      * The column <code>public.MULTI_DATASTREAMS.UNIT_OF_MEASUREMENTS</code>.
      */
-    public final TableField<Record, String> unitOfMeasurements = createField("UNIT_OF_MEASUREMENTS", org.jooq.impl.SQLDataType.CLOB, this, "");
+    public final TableField<Record, JsonValue> unitOfMeasurements = createField("UNIT_OF_MEASUREMENTS", DefaultDataType.getDefaultDataType("\"pg_catalog\".\"jsonb\""), this, "", new JsonBinding());
 
     /**
      * The column <code>public.MULTI_DATASTREAMS.OBSERVED_AREA</code>.
@@ -74,7 +77,7 @@ public abstract class AbstractTableMultiDatastreams<J> extends TableImpl<Record>
     /**
      * The column <code>public.MULTI_DATASTREAMS.PROPERTIES</code>.
      */
-    public final TableField<Record, String> properties = createField("PROPERTIES", org.jooq.impl.SQLDataType.CLOB, this, "");
+    public final TableField<Record, JsonValue> properties = createField("PROPERTIES", DefaultDataType.getDefaultDataType("\"pg_catalog\".\"jsonb\""), this, "", new JsonBinding());
 
     /**
      * Create a <code>public.MULTI_DATASTREAMS</code> table reference

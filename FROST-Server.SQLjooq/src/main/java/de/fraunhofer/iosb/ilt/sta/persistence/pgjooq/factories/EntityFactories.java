@@ -49,6 +49,7 @@ import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.PostgresPersistenceManager;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.QueryBuilder;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils.getFieldOrNull;
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonValue;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.tables.AbstractTableDatastreams;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.tables.AbstractTableLocations;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.tables.AbstractTableMultiDatastreams;
@@ -578,6 +579,10 @@ public class EntityFactories<J> {
     public static Object reParseGeometry(String encodingType, Object object) {
         String json = objectToJson(object);
         return Utils.locationFromEncoding(encodingType, json);
+    }
+
+    public static String objectToJson(JsonValue jsonValue) {
+        return objectToJson(jsonValue.getValue());
     }
 
     public static String objectToJson(Object object) {

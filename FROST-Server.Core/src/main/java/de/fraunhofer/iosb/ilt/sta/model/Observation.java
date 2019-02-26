@@ -17,6 +17,8 @@
  */
 package de.fraunhofer.iosb.ilt.sta.model;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.fraunhofer.iosb.ilt.sta.messagebus.EntityChangedMessage;
 import de.fraunhofer.iosb.ilt.sta.model.core.AbstractEntity;
 import de.fraunhofer.iosb.ilt.sta.model.core.Id;
@@ -30,7 +32,6 @@ import de.fraunhofer.iosb.ilt.sta.path.EntityType;
 import de.fraunhofer.iosb.ilt.sta.path.NavigationProperty;
 import de.fraunhofer.iosb.ilt.sta.path.ResourcePathElement;
 import de.fraunhofer.iosb.ilt.sta.util.IncompleteEntityException;
-import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,10 +48,10 @@ public class Observation extends AbstractEntity<Observation> {
     private static final Logger LOGGER = LoggerFactory.getLogger(Observation.class);
     private TimeValue phenomenonTime;
     private TimeInstant resultTime;
-    private Object result;
-    private Object resultQuality;
+    private JsonNode result;
+    private JsonNode resultQuality;
     private TimeInterval validTime;
-    private Map<String, Object> parameters;
+    private ObjectNode parameters;
     private Datastream datastream;
     private MultiDatastream multiDatastream;
     private FeatureOfInterest featureOfInterest;
@@ -213,11 +214,11 @@ public class Observation extends AbstractEntity<Observation> {
         return setResultTime;
     }
 
-    public Object getResult() {
+    public JsonNode getResult() {
         return result;
     }
 
-    public void setResult(Object result) {
+    public void setResult(JsonNode result) {
         this.result = result;
         setResult = true;
     }
@@ -226,11 +227,11 @@ public class Observation extends AbstractEntity<Observation> {
         return setResult;
     }
 
-    public Object getResultQuality() {
+    public JsonNode getResultQuality() {
         return resultQuality;
     }
 
-    public void setResultQuality(Object resultQuality) {
+    public void setResultQuality(JsonNode resultQuality) {
         this.resultQuality = resultQuality;
         setResultQuality = resultQuality != null;
     }
@@ -252,12 +253,12 @@ public class Observation extends AbstractEntity<Observation> {
         return setValidTime;
     }
 
-    public Map<String, Object> getParameters() {
+    public ObjectNode getParameters() {
         return parameters;
     }
 
-    public void setParameters(Map<String, Object> parameters) {
-        if (parameters != null && parameters.isEmpty()) {
+    public void setParameters(ObjectNode parameters) {
+        if (parameters != null && parameters.size() == 0) {
             this.parameters = null;
         } else {
             this.parameters = parameters;

@@ -25,8 +25,8 @@ import de.fraunhofer.iosb.ilt.sta.path.EntityType;
 import de.fraunhofer.iosb.ilt.sta.path.Property;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.DataSize;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.PostgresPersistenceManager;
-import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils.getFieldOrNull;
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonValue;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.CAN_NOT_BE_NULL;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.CHANGED_MULTIPLE_ROWS;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.NO_ID_OR_NOT_FOUND;
@@ -80,8 +80,9 @@ public class ActuatorFactory<J> implements EntityFactory<Actuator, J> {
         entity.setDescription(getFieldOrNull(record, table.description));
         entity.setEncodingType(getFieldOrNull(record, table.encodingType));
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
-            String props = getFieldOrNull(record, table.properties);
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            JsonValue props = getFieldOrNull(record, table.properties);
+            dataSize.increase(props.getStringLength());
+            entity.setProperties(props.getObjectValue());
         }
         if (select.isEmpty() || select.contains(EntityProperty.METADATA)) {
             String metaDataString = getFieldOrNull(record, table.metadata);
@@ -99,7 +100,7 @@ public class ActuatorFactory<J> implements EntityFactory<Actuator, J> {
         insert.put(table.encodingType, actuator.getEncodingType());
         // We currently assume it's a string.
         insert.put(table.metadata, actuator.getMetadata().toString());
-        insert.put(table.properties, EntityFactories.objectToJson(actuator.getProperties()));
+        insert.put(table.properties, new JsonValue(actuator.getProperties()));
 
         entityFactories.insertUserDefinedId(pm, insert, table.getId(), actuator);
 
@@ -157,7 +158,7 @@ public class ActuatorFactory<J> implements EntityFactory<Actuator, J> {
             message.addField(EntityProperty.METADATA);
         }
         if (actuator.isSetProperties()) {
-            update.put(table.properties, EntityFactories.objectToJson(actuator.getProperties()));
+            update.put(table.properties, new JsonValue(actuator.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
 

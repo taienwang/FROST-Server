@@ -32,6 +32,7 @@ import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.DataSize;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.PostgresPersistenceManager;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils.getFieldOrNull;
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonValue;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.CAN_NOT_BE_NULL;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.CHANGED_MULTIPLE_ROWS;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.NO_ID_OR_NOT_FOUND;
@@ -106,8 +107,9 @@ public class DatastreamFactory<J> implements EntityFactory<Datastream, J> {
             entity.setResultTime(Utils.intervalFromTimes(rTimeStart, rTimeEnd));
         }
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
-            String props = getFieldOrNull(tuple, table.properties);
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            JsonValue props = getFieldOrNull(tuple, table.properties);
+            dataSize.increase(props.getStringLength());
+            entity.setProperties(props.getObjectValue());
         }
         entity.setSensor(entityFactories.sensorFromId(tuple, table.getSensorId()));
         entity.setThing(entityFactories.thingFromId(tuple, table.getThingId()));
@@ -135,7 +137,7 @@ public class DatastreamFactory<J> implements EntityFactory<Datastream, J> {
         insert.put(table.unitDefinition, ds.getUnitOfMeasurement().getDefinition());
         insert.put(table.unitName, ds.getUnitOfMeasurement().getName());
         insert.put(table.unitSymbol, ds.getUnitOfMeasurement().getSymbol());
-        insert.put(table.properties, EntityFactories.objectToJson(ds.getProperties()));
+        insert.put(table.properties, new JsonValue(ds.getProperties()));
 
         insert.put(table.phenomenonTimeStart, PostgresPersistenceManager.DATETIME_MAX);
         insert.put(table.phenomenonTimeEnd, PostgresPersistenceManager.DATETIME_MIN);
@@ -245,7 +247,7 @@ public class DatastreamFactory<J> implements EntityFactory<Datastream, J> {
 
     private void updateProperties(Datastream datastream, Map<Field, Object> update, EntityChangedMessage message) {
         if (datastream.isSetProperties()) {
-            update.put(table.properties, EntityFactories.objectToJson(datastream.getProperties()));
+            update.put(table.properties, new JsonValue(datastream.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
     }

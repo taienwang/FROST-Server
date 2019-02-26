@@ -17,6 +17,10 @@
  */
 package de.fraunhofer.iosb.ilt.sta.model;
 
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import de.fraunhofer.iosb.ilt.sta.model.builder.DatastreamBuilder;
 import de.fraunhofer.iosb.ilt.sta.model.builder.FeatureOfInterestBuilder;
 import de.fraunhofer.iosb.ilt.sta.model.builder.HistoricalLocationBuilder;
@@ -88,15 +92,15 @@ public class EntityBuilderTest {
         propertyValues.put(EntityProperty.NAME, "myName");
         propertyValues.put(EntityProperty.OBSERVATIONTYPE, "my Type");
         propertyValues.put(EntityProperty.OBSERVEDAREA, new Polygon(new LngLatAlt(0, 0), new LngLatAlt(1, 0), new LngLatAlt(1, 1)));
-        Map<String, Object> parameters = new HashMap<>();
+        ObjectNode parameters = JsonNodeFactory.instance.objectNode();
         parameters.put("key1", "value1");
         parameters.put("key2", 2);
         propertyValues.put(EntityProperty.PARAMETERS, parameters);
         propertyValues.put(EntityProperty.PHENOMENONTIME, TimeInstant.now());
         propertyValuesAlternative.put(EntityProperty.PHENOMENONTIME, TimeInterval.parse("2014-03-02T13:00:00Z/2014-05-11T15:30:00Z"));
         propertyValues.put(EntityProperty.PROPERTIES, parameters);
-        propertyValues.put(EntityProperty.RESULT, 42);
-        propertyValues.put(EntityProperty.RESULTQUALITY, "myQuality");
+        propertyValues.put(EntityProperty.RESULT, new IntNode(42));
+        propertyValues.put(EntityProperty.RESULTQUALITY, new TextNode("myQuality"));
         propertyValues.put(EntityProperty.RESULTTIME, TimeInstant.now());
         propertyValuesAlternative.put(EntityProperty.RESULTTIME, TimeInterval.parse("2014-03-01T13:00:00Z/2014-05-11T15:30:00Z"));
         propertyValues.put(EntityProperty.SELFLINK, "http://my.self/link");
@@ -198,8 +202,8 @@ public class EntityBuilderTest {
             String builderName = "de.fraunhofer.iosb.ilt.sta.model.builder." + typeClass.getSimpleName() + "Builder";
             Class<?> builderClass = getClass().getClassLoader().loadClass(builderName);
 
-            Entity entity = typeClass.newInstance();
-            Object builder = builderClass.newInstance();
+            Entity entity = typeClass.getConstructor().newInstance();
+            Object builder = builderClass.getConstructor().newInstance();
             for (Property p : collectedProperties) {
                 pName = p.toString();
                 addPropertyToObject(entity, p);
@@ -219,7 +223,7 @@ public class EntityBuilderTest {
         } catch (IllegalAccessException | NoSuchMethodException ex) {
             LOGGER.error("Failed to access property.", ex);
             Assert.fail("Failed to access property " + pName + " on entity of type " + type);
-        } catch (ClassNotFoundException | InstantiationException ex) {
+        } catch (InvocationTargetException | IllegalArgumentException | ClassNotFoundException | InstantiationException ex) {
             LOGGER.error("Failed create builder.", ex);
             Assert.fail("Failed create builder: " + ex.getMessage());
         }

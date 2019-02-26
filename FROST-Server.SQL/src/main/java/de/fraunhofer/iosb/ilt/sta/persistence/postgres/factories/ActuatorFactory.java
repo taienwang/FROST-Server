@@ -43,7 +43,6 @@ import de.fraunhofer.iosb.ilt.sta.query.Query;
 import de.fraunhofer.iosb.ilt.sta.util.IncompleteEntityException;
 import de.fraunhofer.iosb.ilt.sta.util.NoSuchEntityException;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +82,7 @@ public class ActuatorFactory<I extends SimpleExpression<J> & Path<J>, J> impleme
         }
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
             String props = tuple.get(qInstance.properties);
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            entity.setProperties(Utils.jsonToTreeObject(props));
         }
         if (select.isEmpty() || select.contains(EntityProperty.METADATA)) {
             String metaDataString = tuple.get(qInstance.metadata);
@@ -103,7 +102,7 @@ public class ActuatorFactory<I extends SimpleExpression<J> & Path<J>, J> impleme
         insert.set(qs.encodingType, actuator.getEncodingType());
         // We currently assume it's a string.
         insert.set(qs.metadata, actuator.getMetadata().toString());
-        insert.set(qs.properties, EntityFactories.objectToJson(actuator.getProperties()));
+        insert.set(qs.properties, Utils.objectToJsonExpression(actuator.getProperties()));
 
         entityFactories.insertUserDefinedId(pm, insert, qs.getId(), actuator);
 
@@ -158,7 +157,7 @@ public class ActuatorFactory<I extends SimpleExpression<J> & Path<J>, J> impleme
             message.addField(EntityProperty.METADATA);
         }
         if (actuator.isSetProperties()) {
-            update.set(qs.properties, EntityFactories.objectToJson(actuator.getProperties()));
+            update.set(qs.properties, Utils.objectToJsonExpression(actuator.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
 

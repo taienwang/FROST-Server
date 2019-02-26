@@ -33,6 +33,7 @@ import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.DataSize;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.PostgresPersistenceManager;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils.getFieldOrNull;
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonValue;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.CAN_NOT_BE_NULL;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.CHANGED_MULTIPLE_ROWS;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.NO_ID_OR_NOT_FOUND;
@@ -90,7 +91,9 @@ public class MultiDatastreamFactory<J> implements EntityFactory<MultiDatastream,
         if (id != null) {
             entity.setId(entityFactories.idFromObject(id));
         }
-        List<String> observationTypes = Utils.jsonToObject(getFieldOrNull(tuple, table.observationTypes), EntityFactories.TYPE_LIST_STRING);
+        List<String> observationTypes = Utils.jsonToObject(
+                getFieldOrNull(tuple, table.observationTypes),
+                EntityFactories.TYPE_LIST_STRING);
         entity.setMultiObservationDataTypes(observationTypes);
         String observedArea = getFieldOrNull(tuple, table.observedAreaText);
         if (observedArea != null) {
@@ -112,12 +115,16 @@ public class MultiDatastreamFactory<J> implements EntityFactory<MultiDatastream,
             entity.setResultTime(Utils.intervalFromTimes(rTimeStart, rTimeEnd));
         }
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
-            String props = getFieldOrNull(tuple, table.properties);
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            JsonValue props = getFieldOrNull(tuple, table.properties);
+            dataSize.increase(props.getStringLength());
+            entity.setProperties(props.getObjectValue());
         }
         entity.setSensor(entityFactories.sensorFromId(tuple, table.getSensorId()));
         entity.setThing(entityFactories.thingFromId(tuple, table.getThingId()));
-        List<UnitOfMeasurement> units = Utils.jsonToObject(getFieldOrNull(tuple, table.unitOfMeasurements), EntityFactories.TYPE_LIST_UOM);
+
+        List<UnitOfMeasurement> units = Utils.jsonToObject(
+                getFieldOrNull(tuple, table.unitOfMeasurements),
+                EntityFactories.TYPE_LIST_UOM);
         entity.setUnitOfMeasurements(units);
         return entity;
     }
@@ -134,9 +141,9 @@ public class MultiDatastreamFactory<J> implements EntityFactory<MultiDatastream,
         Map<Field, Object> insert = new HashMap<>();
         insert.put(table.name, ds.getName());
         insert.put(table.description, ds.getDescription());
-        insert.put(table.observationTypes, EntityFactories.objectToJson(ds.getMultiObservationDataTypes()));
-        insert.put(table.unitOfMeasurements, EntityFactories.objectToJson(ds.getUnitOfMeasurements()));
-        insert.put(table.properties, EntityFactories.objectToJson(ds.getProperties()));
+        insert.put(table.observationTypes, new JsonValue(ds.getMultiObservationDataTypes()));
+        insert.put(table.unitOfMeasurements, new JsonValue(ds.getUnitOfMeasurements()));
+        insert.put(table.properties, new JsonValue(ds.getProperties()));
 
         insert.put(table.phenomenonTimeStart, PostgresPersistenceManager.DATETIME_MAX);
         insert.put(table.phenomenonTimeEnd, PostgresPersistenceManager.DATETIME_MIN);
@@ -255,7 +262,7 @@ public class MultiDatastreamFactory<J> implements EntityFactory<MultiDatastream,
 
     private void updateProperties(MultiDatastream md, Map<Field, Object> update, EntityChangedMessage message) {
         if (md.isSetProperties()) {
-            update.put(table.properties, EntityFactories.objectToJson(md.getProperties()));
+            update.put(table.properties, new JsonValue(md.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
     }
@@ -288,7 +295,7 @@ public class MultiDatastreamFactory<J> implements EntityFactory<MultiDatastream,
             }
             List<UnitOfMeasurement> uoms = md.getUnitOfMeasurements();
             countUom = uoms.size();
-            update.put(table.unitOfMeasurements, EntityFactories.objectToJson(uoms));
+            update.put(table.unitOfMeasurements, new JsonValue(uoms));
             message.addField(EntityProperty.UNITOFMEASUREMENTS);
         }
         return countUom;
@@ -302,7 +309,7 @@ public class MultiDatastreamFactory<J> implements EntityFactory<MultiDatastream,
                 throw new IncompleteEntityException("multiObservationDataTypes" + CAN_NOT_BE_NULL);
             }
             countDataTypes = dataTypes.size();
-            update.put(table.observationTypes, EntityFactories.objectToJson(dataTypes));
+            update.put(table.observationTypes, new JsonValue(dataTypes));
             message.addField(EntityProperty.MULTIOBSERVATIONDATATYPES);
         }
         return countDataTypes;

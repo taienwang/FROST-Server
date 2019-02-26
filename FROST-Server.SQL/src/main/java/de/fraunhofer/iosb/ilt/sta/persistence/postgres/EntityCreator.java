@@ -18,6 +18,7 @@
 package de.fraunhofer.iosb.ilt.sta.persistence.postgres;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mysema.commons.lang.CloseableIterator;
 import com.querydsl.core.Tuple;
 import com.querydsl.sql.SQLQuery;
@@ -234,10 +235,7 @@ public class EntityCreator implements ResourcePathVisitor {
         element.getParent().visit(this);
         if (Entity.class.isAssignableFrom(resultObject.getClass())) {
             Object propertyValue = ((Entity) resultObject).getProperty(element.getProperty());
-            Map<String, Object> entityMap = new HashMap<>();
-            entityName = element.getProperty().entitiyName;
-            entityMap.put(entityName, propertyValue);
-            resultObject = entityMap;
+            wrapEntity(element.getProperty().entitiyName, propertyValue);
         }
     }
 
@@ -252,10 +250,15 @@ public class EntityCreator implements ResourcePathVisitor {
                 map = (Map) inner;
                 if (map.containsKey(name)) {
                     Object propertyValue = map.get(name);
-                    Map<String, Object> entityMap = new HashMap<>();
-                    entityName = name;
-                    entityMap.put(entityName, propertyValue);
-                    resultObject = entityMap;
+                    wrapEntity(name, propertyValue);
+                    return;
+                }
+            }
+            if (inner instanceof ObjectNode) {
+                ObjectNode objectNode = (ObjectNode) inner;
+                if (objectNode.has(name)) {
+                    Object propertyValue = objectNode.get(name);
+                    wrapEntity(name, propertyValue);
                     return;
                 }
             }
@@ -263,6 +266,13 @@ public class EntityCreator implements ResourcePathVisitor {
 
         resultObject = null;
         entityName = null;
+    }
+
+    private void wrapEntity(String name, Object propertyValue) {
+        Map<String, Object> entityMap = new HashMap<>();
+        entityName = name;
+        entityMap.put(entityName, propertyValue);
+        resultObject = entityMap;
     }
 
     @Override
@@ -280,10 +290,7 @@ public class EntityCreator implements ResourcePathVisitor {
                 propertyValue = ((List) inner).get(index);
             }
             if (propertyValue != null) {
-                Map<String, Object> entityMap = new HashMap<>();
-                entityName = entityName + "[" + Integer.toString(index) + "]";
-                entityMap.put(entityName, propertyValue);
-                resultObject = entityMap;
+                wrapEntity(entityName + "[" + Integer.toString(index) + "]", propertyValue);
                 return;
             }
         }

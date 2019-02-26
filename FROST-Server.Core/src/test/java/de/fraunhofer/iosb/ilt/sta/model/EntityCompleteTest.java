@@ -17,6 +17,7 @@
  */
 package de.fraunhofer.iosb.ilt.sta.model;
 
+import com.fasterxml.jackson.databind.node.TextNode;
 import de.fraunhofer.iosb.ilt.sta.json.deserialize.EntityParser;
 import de.fraunhofer.iosb.ilt.sta.model.builder.DatastreamBuilder;
 import de.fraunhofer.iosb.ilt.sta.model.builder.MultiDatastreamBuilder;
@@ -133,7 +134,7 @@ public class EntityCompleteTest {
         Observation entity = new Observation();
         Assert.assertFalse(isEntityComplete(entity, containingSet));
 
-        entity.setResult("result");
+        entity.setResult(new TextNode("result"));
         Assert.assertFalse(isEntityComplete(entity, containingSet));
 
         entity.setDatastream(new DatastreamBuilder().setId(new IdLong(2)).build());
@@ -149,12 +150,12 @@ public class EntityCompleteTest {
 
         containingSet = new EntitySetPathElement(EntityType.OBSERVATION, new EntityPathElement(new IdLong(1), EntityType.DATASTREAM, null));
         entity = new Observation();
-        entity.setResult("result");
+        entity.setResult(new TextNode("result"));
         Assert.assertTrue(isEntityComplete(entity, containingSet));
 
         containingSet = new EntitySetPathElement(EntityType.OBSERVATION, new EntityPathElement(new IdLong(1), EntityType.MULTIDATASTREAM, null));
         entity = new Observation();
-        entity.setResult("result");
+        entity.setResult(new TextNode("result"));
         Assert.assertTrue(isEntityComplete(entity, containingSet));
 
     }

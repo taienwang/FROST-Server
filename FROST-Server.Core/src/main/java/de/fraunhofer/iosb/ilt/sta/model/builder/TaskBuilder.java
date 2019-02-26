@@ -17,12 +17,12 @@
  */
 package de.fraunhofer.iosb.ilt.sta.model.builder;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.fraunhofer.iosb.ilt.sta.model.Task;
 import de.fraunhofer.iosb.ilt.sta.model.TaskingCapability;
 import de.fraunhofer.iosb.ilt.sta.model.builder.core.AbstractEntityBuilder;
 import de.fraunhofer.iosb.ilt.sta.model.ext.TimeInstant;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Builder class for Observation objects.
@@ -32,11 +32,11 @@ import java.util.Map;
 public class TaskBuilder extends AbstractEntityBuilder<Task, TaskBuilder> {
 
     private TimeInstant creationTime;
-    private Map<String, Object> taskingParameters;
+    private ObjectNode taskingParameters;
     private TaskingCapability taskingCapability;
 
     public TaskBuilder() {
-        taskingParameters = new HashMap<>();
+        taskingParameters = JsonNodeFactory.instance.objectNode();
     }
 
     public TaskBuilder setCreationTime(TimeInstant creationTime) {
@@ -44,7 +44,7 @@ public class TaskBuilder extends AbstractEntityBuilder<Task, TaskBuilder> {
         return this;
     }
 
-    public TaskBuilder setTaskingParameters(Map<String, Object> taskingParameters) {
+    public TaskBuilder setTaskingParameters(ObjectNode taskingParameters) {
         this.taskingParameters = taskingParameters;
         return this;
     }

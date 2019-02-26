@@ -43,7 +43,6 @@ import de.fraunhofer.iosb.ilt.sta.query.Query;
 import de.fraunhofer.iosb.ilt.sta.util.IncompleteEntityException;
 import de.fraunhofer.iosb.ilt.sta.util.NoSuchEntityException;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +88,7 @@ public class FeatureOfInterestFactory<I extends SimpleExpression<J> & Path<J>, J
         }
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
             String props = tuple.get(qInstance.properties);
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            entity.setProperties(Utils.jsonToTreeObject(props));
         }
         return entity;
     }
@@ -102,7 +101,7 @@ public class FeatureOfInterestFactory<I extends SimpleExpression<J> & Path<J>, J
         SQLInsertClause insert = qFactory.insert(qfoi);
         insert.set(qfoi.name, foi.getName());
         insert.set(qfoi.description, foi.getDescription());
-        insert.set(qfoi.properties, EntityFactories.objectToJson(foi.getProperties()));
+        insert.set(qfoi.properties, Utils.objectToJsonExpression(foi.getProperties()));
 
         String encodingType = foi.getEncodingType();
         insert.set(qfoi.encodingType, encodingType);
@@ -166,7 +165,7 @@ public class FeatureOfInterestFactory<I extends SimpleExpression<J> & Path<J>, J
 
     private void updateProperties(FeatureOfInterest foi, SQLUpdateClause update, AbstractQFeatures<? extends AbstractQFeatures, I, J> qfoi, EntityChangedMessage message) {
         if (foi.isSetProperties()) {
-            update.set(qfoi.properties, EntityFactories.objectToJson(foi.getProperties()));
+            update.set(qfoi.properties, Utils.objectToJsonExpression(foi.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
     }

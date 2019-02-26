@@ -17,9 +17,9 @@
  */
 package de.fraunhofer.iosb.ilt.sta.model.core;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.fraunhofer.iosb.ilt.sta.messagebus.EntityChangedMessage;
 import de.fraunhofer.iosb.ilt.sta.path.EntityProperty;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -32,7 +32,7 @@ public abstract class NamedEntity<T extends NamedEntity<T>> extends AbstractEnti
 
     private String name;
     private String description;
-    private Map<String, Object> properties;
+    private ObjectNode properties;
 
     private boolean setName;
     private boolean setDescription;
@@ -123,7 +123,7 @@ public abstract class NamedEntity<T extends NamedEntity<T>> extends AbstractEnti
     /**
      * @return the Properties map of the entity.
      */
-    public Map<String, Object> getProperties() {
+    public ObjectNode getProperties() {
         return properties;
     }
 
@@ -133,8 +133,8 @@ public abstract class NamedEntity<T extends NamedEntity<T>> extends AbstractEnti
      * @param properties The Properties to set. Setting this to an empty map
      * will set the properties to null.
      */
-    public void setProperties(Map<String, Object> properties) {
-        if (properties != null && properties.isEmpty()) {
+    public void setProperties(ObjectNode properties) {
+        if (properties != null && properties.size() == 0) {
             this.properties = null;
         } else {
             this.properties = properties;

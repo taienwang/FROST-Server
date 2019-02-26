@@ -53,7 +53,6 @@ import de.fraunhofer.iosb.ilt.sta.util.NoSuchEntityException;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +98,7 @@ public class LocationFactory<I extends SimpleExpression<J> & Path<J>, J> impleme
         }
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
             String props = tuple.get(qInstance.properties);
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            entity.setProperties(Utils.jsonToTreeObject(props));
         }
         return entity;
     }
@@ -111,7 +110,7 @@ public class LocationFactory<I extends SimpleExpression<J> & Path<J>, J> impleme
         SQLInsertClause insert = qFactory.insert(ql);
         insert.set(ql.name, l.getName());
         insert.set(ql.description, l.getDescription());
-        insert.set(ql.properties, EntityFactories.objectToJson(l.getProperties()));
+        insert.set(ql.properties, Utils.objectToJsonExpression(l.getProperties()));
 
         String encodingType = l.getEncodingType();
         insert.set(ql.encodingType, encodingType);
@@ -184,7 +183,7 @@ public class LocationFactory<I extends SimpleExpression<J> & Path<J>, J> impleme
 
     private void updateProperties(Location location, SQLUpdateClause update, AbstractQLocations<? extends AbstractQLocations, I, J> ql, EntityChangedMessage message) {
         if (location.isSetProperties()) {
-            update.set(ql.properties, EntityFactories.objectToJson(location.getProperties()));
+            update.set(ql.properties, Utils.objectToJsonExpression(location.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
     }

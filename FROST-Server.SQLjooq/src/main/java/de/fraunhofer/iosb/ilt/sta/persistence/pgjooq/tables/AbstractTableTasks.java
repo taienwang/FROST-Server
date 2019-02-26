@@ -1,11 +1,14 @@
 package de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.tables;
 
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonBinding;
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonValue;
 import java.time.OffsetDateTime;
 import org.jooq.Field;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.TableField;
 import org.jooq.impl.DSL;
+import org.jooq.impl.DefaultDataType;
 import org.jooq.impl.TableImpl;
 
 public abstract class AbstractTableTasks<J> extends TableImpl<Record> implements StaTable<J> {
@@ -25,7 +28,7 @@ public abstract class AbstractTableTasks<J> extends TableImpl<Record> implements
     /**
      * The column <code>public.TASKINGCAPABILITIES.PROPERTIES</code>.
      */
-    public final TableField<Record, String> taskingParameters = createField("TASKING_PARAMETERS", org.jooq.impl.SQLDataType.CLOB, this, "");
+    public final TableField<Record, JsonValue> taskingParameters = createField("TASKING_PARAMETERS", DefaultDataType.getDefaultDataType("\"pg_catalog\".\"jsonb\""), this, "", new JsonBinding());
 
     /**
      * Create a <code>public.TASKS</code> table reference

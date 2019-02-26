@@ -17,6 +17,12 @@
  */
 package de.fraunhofer.iosb.ilt.sta.persistence.postgres.factories;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.DecimalNode;
+import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.dml.StoreClause;
 import com.querydsl.core.types.Path;
@@ -53,8 +59,6 @@ import de.fraunhofer.iosb.ilt.sta.util.NoSuchEntityException;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,7 +110,7 @@ public class ObservationFactory<I extends SimpleExpression<J> & Path<J>, J> impl
         if (select.isEmpty() || select.contains(EntityProperty.PARAMETERS)) {
             String props = tuple.get(qInstance.parameters);
             dataSize.increase(props == null ? 0 : props.length());
-            entity.setParameters(Utils.jsonToObject(props, Map.class));
+            entity.setParameters(Utils.jsonToTreeObject(props));
         }
 
         Timestamp pTimeStart = tuple.get(qInstance.phenomenonTimeStart);
@@ -129,7 +133,7 @@ public class ObservationFactory<I extends SimpleExpression<J> & Path<J>, J> impl
         if (select.isEmpty() || select.contains(EntityProperty.RESULTQUALITY)) {
             String resultQuality = tuple.get(qInstance.resultQuality);
             dataSize.increase(resultQuality == null ? 0 : resultQuality.length());
-            entity.setResultQuality(Utils.jsonToObject(resultQuality, Object.class));
+            entity.setResultQuality(Utils.jsonToTree(resultQuality));
         }
     }
 
@@ -142,14 +146,14 @@ public class ObservationFactory<I extends SimpleExpression<J> & Path<J>, J> impl
             ResultType resultType = ResultType.fromSqlValue(resultTypeOrd);
             switch (resultType) {
                 case BOOLEAN:
-                    entity.setResult(tuple.get(qInstance.resultBoolean));
+                    entity.setResult(BooleanNode.valueOf(tuple.get(qInstance.resultBoolean)));
                     break;
                 case NUMBER:
                     try {
-                        entity.setResult(new BigDecimal(tuple.get(qInstance.resultString)));
+                        entity.setResult(DecimalNode.valueOf(new BigDecimal(tuple.get(qInstance.resultString))));
                     } catch (NumberFormatException e) {
                         // It was not a Number? Use the double value.
-                        entity.setResult(tuple.get(qInstance.resultNumber));
+                        entity.setResult(DoubleNode.valueOf(tuple.get(qInstance.resultNumber)));
                     }
                     break;
                 case OBJECT_ARRAY:
@@ -160,7 +164,7 @@ public class ObservationFactory<I extends SimpleExpression<J> & Path<J>, J> impl
                 case STRING:
                     String stringData = tuple.get(qInstance.resultString);
                     dataSize.increase(stringData == null ? 0 : stringData.length());
-                    entity.setResult(stringData);
+                    entity.setResult(TextNode.valueOf(stringData));
                     break;
             }
         }
@@ -211,10 +215,8 @@ public class ObservationFactory<I extends SimpleExpression<J> & Path<J>, J> impl
 
         handleResult(newObservation, newIsMultiDatastream, pm, query, qo);
 
-        if (newObservation.getResultQuality() != null) {
-            query.set(qo.resultQuality, newObservation.getResultQuality().toString());
-        }
-        query.set(qo.parameters, EntityFactories.objectToJson(newObservation.getParameters()));
+        query.set(qo.resultQuality, Utils.objectToJsonExpression(newObservation.getResultQuality()));
+        query.set(qo.parameters, Utils.objectToJsonExpression(newObservation.getParameters()));
         query.set(qo.getFeatureId(), (J) f.getId().getValue());
 
         entityFactories.insertUserDefinedId(pm, query, qo.getId(), newObservation);
@@ -248,7 +250,7 @@ public class ObservationFactory<I extends SimpleExpression<J> & Path<J>, J> impl
             message.addField(NavigationProperty.FEATUREOFINTEREST);
         }
         if (newObservation.isSetParameters()) {
-            query.set(qo.parameters, EntityFactories.objectToJson(newObservation.getParameters()));
+            query.set(qo.parameters, Utils.objectToJsonExpression(newObservation.getParameters()));
             message.addField(EntityProperty.PARAMETERS);
         }
         if (newObservation.isSetPhenomenonTime()) {
@@ -265,7 +267,7 @@ public class ObservationFactory<I extends SimpleExpression<J> & Path<J>, J> impl
         }
 
         if (newObservation.isSetResultQuality()) {
-            query.set(qo.resultQuality, EntityFactories.objectToJson(newObservation.getResultQuality()));
+            query.set(qo.resultQuality, Utils.objectToJsonExpression(newObservation.getResultQuality()));
             message.addField(EntityProperty.RESULTQUALITY);
         }
         if (newObservation.isSetResultTime()) {
@@ -290,45 +292,45 @@ public class ObservationFactory<I extends SimpleExpression<J> & Path<J>, J> impl
     }
 
     private void handleResult(Observation newObservation, boolean newIsMultiDatastream, PostgresPersistenceManager<I, J> pm, StoreClause query, AbstractQObservations<? extends AbstractQObservations, I, J> qo) {
-        Object result = newObservation.getResult();
+        JsonNode result = newObservation.getResult();
         if (newIsMultiDatastream) {
             MultiDatastream mds = newObservation.getMultiDatastream();
-            if (!(result instanceof List)) {
+            if (!(result.isArray())) {
                 throw new IllegalArgumentException("Multidatastream only accepts array results.");
             }
-            List list = (List) result;
+            ArrayNode array = (ArrayNode) result;
             ResourcePath path = mds.getPath();
             path.addPathElement(new EntitySetPathElement(EntityType.OBSERVEDPROPERTY, null), false, false);
             long count = pm.count(path, null);
-            if (count != list.size()) {
-                throw new IllegalArgumentException("Size of result array (" + list.size() + ") must match number of observed properties (" + count + ") in the MultiDatastream.");
+            if (count != array.size()) {
+                throw new IllegalArgumentException("Size of result array (" + array.size() + ") must match number of observed properties (" + count + ") in the MultiDatastream.");
             }
         }
 
-        if (result instanceof Number) {
+        if (result.isNumber()) {
             query.set(qo.resultType, ResultType.NUMBER.sqlValue());
-            query.set(qo.resultString, result.toString());
-            query.set(qo.resultNumber, ((Number) result).doubleValue());
+            query.set(qo.resultString, result.asText());
+            query.set(qo.resultNumber, result.asDouble());
             query.setNull(qo.resultBoolean);
-            query.setNull(qo.resultJson);
-        } else if (result instanceof Boolean) {
+            query.set(qo.resultJson, Utils.objectToJsonExpression(null));
+        } else if (result.isBoolean()) {
             query.set(qo.resultType, ResultType.BOOLEAN.sqlValue());
-            query.set(qo.resultString, result.toString());
-            query.set(qo.resultBoolean, result);
+            query.set(qo.resultString, result.asText());
             query.setNull(qo.resultNumber);
-            query.setNull(qo.resultJson);
-        } else if (result instanceof String) {
+            query.set(qo.resultBoolean, result.asBoolean());
+            query.set(qo.resultJson, Utils.objectToJsonExpression(null));
+        } else if (result.isTextual()) {
             query.set(qo.resultType, ResultType.STRING.sqlValue());
-            query.set(qo.resultString, result.toString());
+            query.set(qo.resultString, result.asText());
             query.setNull(qo.resultNumber);
             query.setNull(qo.resultBoolean);
-            query.setNull(qo.resultJson);
+            query.set(qo.resultJson, Utils.objectToJsonExpression(null));
         } else {
             query.set(qo.resultType, ResultType.OBJECT_ARRAY.sqlValue());
-            query.set(qo.resultJson, EntityFactories.objectToJson(result));
             query.setNull(qo.resultString);
             query.setNull(qo.resultNumber);
             query.setNull(qo.resultBoolean);
+            query.set(qo.resultJson, Utils.objectToJsonExpression(result));
         }
     }
 

@@ -19,11 +19,13 @@ package de.fraunhofer.iosb.ilt.sta.persistence.pgjooq;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import de.fraunhofer.iosb.ilt.sta.json.deserialize.EntityParser;
 import de.fraunhofer.iosb.ilt.sta.json.deserialize.custom.GeoJsonDeserializier;
 import de.fraunhofer.iosb.ilt.sta.model.ext.TimeInstant;
 import de.fraunhofer.iosb.ilt.sta.model.ext.TimeInterval;
 import de.fraunhofer.iosb.ilt.sta.model.ext.TimeValue;
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonValue;
 import static de.fraunhofer.iosb.ilt.sta.settings.CoreSettings.UTC;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -40,6 +42,10 @@ import org.slf4j.LoggerFactory;
  * @author scf
  */
 public class Utils {
+
+    public static final TypeReference<Map<String, Object>> TYPE_LIST_MAP_STRING_OBJECT = new TypeReference<Map<String, Object>>() {
+        // Empty on purpose.
+    };
 
     public static final String INTERVAL_PARAM = "(?)::interval";
     public static final String TIMESTAMP_PARAM = "(?)::timestamp";
@@ -124,6 +130,14 @@ public class Utils {
         }
     }
 
+    public static JsonNode objectToTree(Object object) {
+        if (object == null) {
+            return NullNode.instance;
+        }
+
+        return EntityParser.getSimpleObjectMapper().valueToTree(object);
+    }
+
     public static <T> T jsonToObject(String json, Class<T> clazz) {
         if (json == null) {
             return null;
@@ -133,6 +147,24 @@ public class Utils {
         } catch (IOException ex) {
             throw new IllegalStateException(FAILED_JSON_PARSE, ex);
         }
+    }
+
+    public static <T> T jsonToObject(JsonNode json, TypeReference<T> typeReference) {
+        if (json == null) {
+            return null;
+        }
+        try {
+            return EntityParser.getSimpleObjectMapper().convertValue(json, typeReference);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalStateException(FAILED_JSON_PARSE, ex);
+        }
+    }
+
+    public static <T> T jsonToObject(JsonValue json, TypeReference<T> typeReference) {
+        if (json == null) {
+            return null;
+        }
+        return jsonToObject(json.getValue(), typeReference);
     }
 
     public static <T> T jsonToObject(String json, TypeReference<T> typeReference) {

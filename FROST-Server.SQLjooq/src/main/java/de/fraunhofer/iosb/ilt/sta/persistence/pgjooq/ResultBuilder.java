@@ -18,6 +18,7 @@
 package de.fraunhofer.iosb.ilt.sta.persistence.pgjooq;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.fraunhofer.iosb.ilt.sta.model.core.Entity;
 import de.fraunhofer.iosb.ilt.sta.model.core.EntitySet;
 import de.fraunhofer.iosb.ilt.sta.model.core.NavigableElement;
@@ -262,10 +263,15 @@ public class ResultBuilder implements ResourcePathVisitor {
                 map = (Map) inner;
                 if (map.containsKey(name)) {
                     Object propertyValue = map.get(name);
-                    Map<String, Object> entityMap = new HashMap<>();
-                    entityName = name;
-                    entityMap.put(entityName, propertyValue);
-                    resultObject = entityMap;
+                    wrapEntity(name, propertyValue);
+                    return;
+                }
+            }
+            if (inner instanceof ObjectNode) {
+                ObjectNode objectNode = (ObjectNode) inner;
+                if (objectNode.has(name)) {
+                    Object propertyValue = objectNode.get(name);
+                    wrapEntity(name, propertyValue);
                     return;
                 }
             }
@@ -273,6 +279,12 @@ public class ResultBuilder implements ResourcePathVisitor {
 
         resultObject = null;
         entityName = null;
+    }
+    private void wrapEntity(String name, Object propertyValue) {
+        Map<String, Object> entityMap = new HashMap<>();
+        entityName = name;
+        entityMap.put(entityName, propertyValue);
+        resultObject = entityMap;
     }
 
     @Override
@@ -290,10 +302,7 @@ public class ResultBuilder implements ResourcePathVisitor {
                 propertyValue = ((List) inner).get(index);
             }
             if (propertyValue != null) {
-                Map<String, Object> entityMap = new HashMap<>();
-                entityName = entityName + "[" + Integer.toString(index) + "]";
-                entityMap.put(entityName, propertyValue);
-                resultObject = entityMap;
+                wrapEntity(entityName + "[" + Integer.toString(index) + "]", propertyValue);
                 return;
             }
         }

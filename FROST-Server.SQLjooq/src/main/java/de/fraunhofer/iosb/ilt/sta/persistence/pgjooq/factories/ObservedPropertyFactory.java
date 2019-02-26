@@ -27,8 +27,8 @@ import de.fraunhofer.iosb.ilt.sta.path.EntityType;
 import de.fraunhofer.iosb.ilt.sta.path.Property;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.DataSize;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.PostgresPersistenceManager;
-import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils.getFieldOrNull;
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonValue;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.CAN_NOT_BE_NULL;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.CHANGED_MULTIPLE_ROWS;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.NO_ID_OR_NOT_FOUND;
@@ -86,8 +86,9 @@ public class ObservedPropertyFactory<J> implements EntityFactory<ObservedPropert
         }
         entity.setName(getFieldOrNull(tuple, table.name));
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
-            String props = getFieldOrNull(tuple, table.properties);
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            JsonValue props = getFieldOrNull(tuple, table.properties);
+            dataSize.increase(props.getStringLength());
+            entity.setProperties(props.getObjectValue());
         }
         return entity;
     }
@@ -98,7 +99,7 @@ public class ObservedPropertyFactory<J> implements EntityFactory<ObservedPropert
         insert.put(table.definition, op.getDefinition());
         insert.put(table.name, op.getName());
         insert.put(table.description, op.getDescription());
-        insert.put(table.properties, EntityFactories.objectToJson(op.getProperties()));
+        insert.put(table.properties, new JsonValue(op.getProperties()));
 
         entityFactories.insertUserDefinedId(pm, insert, table.getId(), op);
 
@@ -155,7 +156,7 @@ public class ObservedPropertyFactory<J> implements EntityFactory<ObservedPropert
             message.addField(EntityProperty.NAME);
         }
         if (op.isSetProperties()) {
-            update.put(table.properties, EntityFactories.objectToJson(op.getProperties()));
+            update.put(table.properties, new JsonValue(op.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
 

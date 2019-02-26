@@ -28,8 +28,8 @@ import de.fraunhofer.iosb.ilt.sta.path.NavigationProperty;
 import de.fraunhofer.iosb.ilt.sta.path.Property;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.DataSize;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.PostgresPersistenceManager;
-import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils.getFieldOrNull;
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonValue;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.CAN_NOT_BE_NULL;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.CHANGED_MULTIPLE_ROWS;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.NO_ID_OR_NOT_FOUND;
@@ -83,12 +83,14 @@ public class TaskingCapabilityFactory<J> implements EntityFactory<TaskingCapabil
         entity.setName(getFieldOrNull(record, table.name));
         entity.setDescription(getFieldOrNull(record, table.description));
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
-            String props = getFieldOrNull(record, table.properties);
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            JsonValue props = getFieldOrNull(record, table.properties);
+            dataSize.increase(props.getStringLength());
+            entity.setProperties(props.getObjectValue());
         }
         if (select.isEmpty() || select.contains(EntityProperty.TASKINGPARAMETERS)) {
-            String props = getFieldOrNull(record, table.taskingParameters);
-            entity.setTaskingParameters(Utils.jsonToObject(props, Map.class));
+            JsonValue taskingParams = getFieldOrNull(record, table.taskingParameters);
+            dataSize.increase(taskingParams.getStringLength());
+            entity.setTaskingParameters(taskingParams.getObjectValue());
         }
         entity.setActuator(entityFactories.actuatorFromId(record, table.getActuatorId()));
         entity.setThing(entityFactories.thingFromId(record, table.getThingId()));
@@ -109,8 +111,8 @@ public class TaskingCapabilityFactory<J> implements EntityFactory<TaskingCapabil
 
         insert.put(table.name, tc.getName());
         insert.put(table.description, tc.getDescription());
-        insert.put(table.properties, EntityFactories.objectToJson(tc.getProperties()));
-        insert.put(table.taskingParameters, EntityFactories.objectToJson(tc.getTaskingParameters()));
+        insert.put(table.properties, new JsonValue(tc.getProperties()));
+        insert.put(table.taskingParameters, new JsonValue(tc.getTaskingParameters()));
 
         insert.put(table.getActuatorId(), (J) actuator.getId().getValue());
         insert.put(table.getThingId(), (J) thing.getId().getValue());
@@ -189,14 +191,14 @@ public class TaskingCapabilityFactory<J> implements EntityFactory<TaskingCapabil
 
     private void updateProperties(TaskingCapability taskingCapability, Map<Field, Object> update, EntityChangedMessage message) {
         if (taskingCapability.isSetProperties()) {
-            update.put(table.properties, EntityFactories.objectToJson(taskingCapability.getProperties()));
+            update.put(table.properties, new JsonValue(taskingCapability.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
     }
 
     private void updateTaskingParameters(TaskingCapability taskingCapability, Map<Field, Object> update, EntityChangedMessage message) {
         if (taskingCapability.isSetTaskingParameters()) {
-            update.put(table.taskingParameters, EntityFactories.objectToJson(taskingCapability.getTaskingParameters()));
+            update.put(table.taskingParameters, new JsonValue(taskingCapability.getTaskingParameters()));
             message.addField(EntityProperty.TASKINGPARAMETERS);
         }
     }

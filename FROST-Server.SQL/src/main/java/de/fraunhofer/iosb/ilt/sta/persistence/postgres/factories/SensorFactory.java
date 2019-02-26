@@ -45,7 +45,6 @@ import de.fraunhofer.iosb.ilt.sta.query.Query;
 import de.fraunhofer.iosb.ilt.sta.util.IncompleteEntityException;
 import de.fraunhofer.iosb.ilt.sta.util.NoSuchEntityException;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +89,7 @@ public class SensorFactory<I extends SimpleExpression<J> & Path<J>, J> implement
         }
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
             String props = tuple.get(qInstance.properties);
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            entity.setProperties(Utils.jsonToTreeObject(props));
         }
         return entity;
     }
@@ -105,7 +104,7 @@ public class SensorFactory<I extends SimpleExpression<J> & Path<J>, J> implement
         insert.set(qs.encodingType, s.getEncodingType());
         // We currently assume it's a string.
         insert.set(qs.metadata, s.getMetadata().toString());
-        insert.set(qs.properties, EntityFactories.objectToJson(s.getProperties()));
+        insert.set(qs.properties, Utils.objectToJsonExpression(s.getProperties()));
 
         entityFactories.insertUserDefinedId(pm, insert, qs.getId(), s);
 
@@ -167,7 +166,7 @@ public class SensorFactory<I extends SimpleExpression<J> & Path<J>, J> implement
             message.addField(EntityProperty.METADATA);
         }
         if (sensor.isSetProperties()) {
-            update.set(qs.properties, EntityFactories.objectToJson(sensor.getProperties()));
+            update.set(qs.properties, Utils.objectToJsonExpression(sensor.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
 

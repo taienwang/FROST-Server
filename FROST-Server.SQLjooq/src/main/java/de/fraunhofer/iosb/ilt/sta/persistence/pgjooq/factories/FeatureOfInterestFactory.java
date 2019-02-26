@@ -27,6 +27,7 @@ import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.DataSize;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.PostgresPersistenceManager;
 import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.Utils.getFieldOrNull;
+import de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.bindings.JsonValue;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.CAN_NOT_BE_NULL;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.CHANGED_MULTIPLE_ROWS;
 import static de.fraunhofer.iosb.ilt.sta.persistence.pgjooq.factories.EntityFactories.NO_ID_OR_NOT_FOUND;
@@ -83,8 +84,9 @@ public class FeatureOfInterestFactory<J> implements EntityFactory<FeatureOfInter
             entity.setFeature(Utils.locationFromEncoding(encodingType, locationString));
         }
         if (select.isEmpty() || select.contains(EntityProperty.PROPERTIES)) {
-            String props = getFieldOrNull(record, table.properties);
-            entity.setProperties(Utils.jsonToObject(props, Map.class));
+            JsonValue props = getFieldOrNull(record, table.properties);
+            dataSize.increase(props.getStringLength());
+            entity.setProperties(props.getObjectValue());
         }
         return entity;
     }
@@ -95,7 +97,7 @@ public class FeatureOfInterestFactory<J> implements EntityFactory<FeatureOfInter
         Map<Field, Object> insert = new HashMap<>();
         insert.put(table.name, foi.getName());
         insert.put(table.description, foi.getDescription());
-        insert.put(table.properties, EntityFactories.objectToJson(foi.getProperties()));
+        insert.put(table.properties, new JsonValue(foi.getProperties()));
 
         String encodingType = foi.getEncodingType();
         insert.put(table.encodingType, encodingType);
@@ -165,7 +167,7 @@ public class FeatureOfInterestFactory<J> implements EntityFactory<FeatureOfInter
 
     private void updateProperties(FeatureOfInterest foi, Map<Field, Object> update, EntityChangedMessage message) {
         if (foi.isSetProperties()) {
-            update.put(table.properties, EntityFactories.objectToJson(foi.getProperties()));
+            update.put(table.properties, new JsonValue(foi.getProperties()));
             message.addField(EntityProperty.PROPERTIES);
         }
     }

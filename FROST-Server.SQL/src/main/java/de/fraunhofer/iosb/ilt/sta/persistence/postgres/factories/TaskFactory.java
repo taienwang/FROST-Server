@@ -45,7 +45,6 @@ import de.fraunhofer.iosb.ilt.sta.util.NoSuchEntityException;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +82,7 @@ public class TaskFactory<I extends SimpleExpression<J> & Path<J>, J> implements 
         entity.setCreationTime(Utils.instantFromTime(tuple.get(qInstance.creationTime)));
         if (select.isEmpty() || select.contains(EntityProperty.TASKINGPARAMETERS)) {
             String taskingParams = tuple.get(qInstance.taskingParameters);
-            entity.setTaskingParameters(Utils.jsonToObject(taskingParams, Map.class));
+            entity.setTaskingParameters(Utils.jsonToTreeObject(taskingParams));
         }
 
         return entity;
@@ -100,7 +99,7 @@ public class TaskFactory<I extends SimpleExpression<J> & Path<J>, J> implements 
         SQLInsertClause insert = qFactory.insert(qt);
         insert.set(qt.creationTime, new Timestamp(Calendar.getInstance().getTimeInMillis()));
         insert.set(qt.getTaskingcapabilityId(), tcId);
-        insert.set(qt.taskingParameters, EntityFactories.objectToJson(task.getTaskingParameters()));
+        insert.set(qt.taskingParameters, Utils.objectToJsonExpression(task.getTaskingParameters()));
 
         entityFactories.insertUserDefinedId(pm, insert, qt.getId(), task);
 
@@ -133,7 +132,7 @@ public class TaskFactory<I extends SimpleExpression<J> & Path<J>, J> implements 
             message.addField(EntityProperty.TIME);
         }
         if (task.isSetTaskingParameters()) {
-            update.set(qt.taskingParameters, EntityFactories.objectToJson(task.getTaskingParameters()));
+            update.set(qt.taskingParameters, Utils.objectToJsonExpression(task.getTaskingParameters()));
             message.addField(EntityProperty.TASKINGPARAMETERS);
         }
         update.where(qt.getId().eq(id));
